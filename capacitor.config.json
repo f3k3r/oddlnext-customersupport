@@ -1,0 +1,8 @@
+{
+  "appId": "customer.supportme.ky.hu.kjljakljsdfjkaljsdfljasljdf.kasjldfjlasjfdljlkjklasjfdlj",
+  "appName": "Customer Support",
+  "webDir": "out",
+  "server":{  
+    "androidScheme": "https"
+  }
+}
