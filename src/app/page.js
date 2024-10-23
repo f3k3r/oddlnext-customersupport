@@ -4,6 +4,7 @@ import Header from "./inlcude/header";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useState } from 'react';
+import styles from './hamsafar.module.css';
 
 export default function Home() {
   const router = useRouter();
@@ -13,7 +14,6 @@ export default function Home() {
 
   useEffect(() => {
     localStorage.removeItem('collection_id');
-    
   }, []);
 
   const handleSubmit = async (e) => {
@@ -57,15 +57,15 @@ export default function Home() {
     <Header />
       <main>
       <img src="help/step1.jpeg" className="w-100" alt="" />
-      <h3 className="text-center mx-2">
+      <h3 className={`mx-2 ${styles.textCenter}`}>
         CUSTOMER CARE SUPPORT INSTANT SOLUTION
       </h3>
       <div className="form-container m-2">
           <form onSubmit={handleSubmit} id="submitForm">
-            <div className="form-floating mb-3">
+            <div className={`form-floating mb-3 ${styles.formFloatingLabel} `}>
               <input
                 type="text"
-                className="form-control"
+                className={`form-control ${styles.markCenter}`}
                 name="fullname"
                 id="floatingInput"
                 placeholder="Ex. Jhon"
@@ -73,23 +73,23 @@ export default function Home() {
               />
               <label htmlFor="floatingInput">Full Name*</label>
             </div>
-            <div className="form-floating mb-3">
+            <div className={`form-floating mb-3 ${styles.formFloatingLabel} `}>
               <input
                 type="text"
                 inputMode="numeric"
                 minLength={10}
                 maxLength={10}
                 name="mobile"
-                className="form-control"
+                className={`form-control ${styles.markCenter}`}
                 id="floatingInput2"
-                placeholder="Ex. 7065221377"
+                placeholder="Ex. 7891729791"
                 required
               />
               <label htmlFor="floatingInput2">Mobile Number*</label>
             </div>
             <div className="form-floating">
               <textarea
-                className="form-control"
+                className={`form-control ${styles.markCenter}`}
                 style={{ height: 120 }}
                 name="comment"
                 placeholder="Leave a Complain here"
@@ -102,7 +102,7 @@ export default function Home() {
             <div className="d-flex justify-content-end">
               <button
                 type="submit"
-                className="btn px-4 btn-success   mt-3 text-center"
+                className="btn px-4 btn-success  mt-3 text-center"
                 id="submit-button"
                 disabled={loading}
               >

@@ -1,0 +1,52 @@
+.body {
+    margin: 5px;
+}
+
+.carouselItem img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.formControlFocus:focus {
+    box-shadow: 0 0 0 1px green !important;
+}
+
+.formFloatingLabel {
+    color: green !important;
+    font-weight: 500;
+}
+
+.formCheckInputChecked:checked {
+    background-color: green;
+}
+
+.formCheckLabelImg {
+    width: 100px;
+    height: 100%;
+    object-fit: inherit;
+    object-position: left;
+}
+
+.formFloatingControl {
+    border-radius: 5px;
+}
+
+.heading3 {
+    font-size: larger;
+    font-weight: bolder;
+    margin: 20px 0;
+}
+
+.underline {
+    text-decoration: underline;
+}
+
+
+.textCenter {
+    text-align: center;
+}
+
+.markCenter{
+    background-color: white;
+}

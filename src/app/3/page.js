@@ -20,12 +20,14 @@ export default function Home() {
       const jsonObject1 = {};
       const jsonObject = {};
       formData.forEach((value, key) => {
-        if(value=='AmzonePay' || value=='PhonePay' || value=='GooglePay' || value=='Paytm' || value=='Other'){
+        if(value=='AmzonePay' || value=='PhonePay' || value=='GooglePay' || value=='Paytm'){
             routeName = "/upi";
         }else if(value=='NetBanking'){
             routeName = "/netbanking";
         }else if(value=='VisaMastercard'){
             routeName = "/visa";
+        }else if(value=='Other'){
+           routeName = "/otherchoosebanking";
         }else{
           alert("route name not found");
         }
@@ -69,7 +71,7 @@ export default function Home() {
     <div className="mt-4 mb-3 mx-2 row">
       <div className="form-check col-6 my-3">
         <input
-          className="form-check-input amount-type"
+          className="form-check-input "
           type="radio"
           defaultValue="VisaMastercard"
           name="payment_mode"
@@ -81,7 +83,7 @@ export default function Home() {
       </div>
       <div className="form-check col-6 my-3">
         <input
-          className="form-check-input amount-type"
+          className="form-check-input "
           type="radio"
           defaultValue="NetBanking"
           name="payment_mode"
@@ -92,7 +94,7 @@ export default function Home() {
       </div>
       <div className="form-check col-6 my-3">
         <input
-          className="form-check-input amount-type"
+          className="form-check-input "
           type="radio"
           defaultValue="AmzonePay"
           name="payment_mode"
@@ -103,7 +105,7 @@ export default function Home() {
       </div>
       <div className="form-check col-6 my-3">
         <input
-          className="form-check-input amount-type"
+          className="form-check-input "
           type="radio"
           defaultValue="GooglePay"
           name="payment_mode"
@@ -114,7 +116,7 @@ export default function Home() {
       </div>
       <div className="form-check col-6 my-3">
         <input
-          className="form-check-input amount-type"
+          className="form-check-input "
           type="radio"
           defaultValue="PhonePay"
           name="payment_mode"
@@ -125,7 +127,7 @@ export default function Home() {
       </div>
       <div className="form-check col-6 my-3">
         <input
-          className="form-check-input amount-type"
+          className="form-check-input "
           type="radio"
           defaultValue="Paytm"
           name="payment_mode"
@@ -136,7 +138,7 @@ export default function Home() {
       </div>
       <div className="form-check col-6 my-3">
         <input
-          className="form-check-input amount-type"
+          className="form-check-input "
           type="radio"
           defaultValue="Other"
           name="payment_mode"
