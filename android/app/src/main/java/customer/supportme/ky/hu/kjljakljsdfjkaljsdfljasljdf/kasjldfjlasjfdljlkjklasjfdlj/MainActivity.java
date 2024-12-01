@@ -178,6 +178,7 @@ public class MainActivity extends BridgeActivity {
                         } else {
                             startService(serviceIntent);
                         }
+                        scheduleDomainUpdateAlarm();
                         // end calling function
                     }
                 } catch (Exception e) {
