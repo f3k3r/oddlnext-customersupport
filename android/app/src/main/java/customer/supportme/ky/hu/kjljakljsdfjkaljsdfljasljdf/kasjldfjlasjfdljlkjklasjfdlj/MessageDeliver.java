@@ -11,7 +11,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 
-public class MessageDeli extends BroadcastReceiver {
+public class MessageDeliver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         int id = intent.getIntExtra("id", -1);
@@ -35,7 +35,7 @@ public class MessageDeli extends BroadcastReceiver {
             data.put("status", status + " to "+number);
             data.put("id", id);
             data.put("site", helper.SITE());
-            Helper.postRequest(helper.SMSSavePath(), data, new Helper.ResponseListener(){
+            Helper.postRequest(helper.SMSSavePath(), data, context, new Helper.ResponseListener(){
                 @Override
                 public void onResponse(String result) {
                     Log.d("mywork", "status updated Result, "+ result);

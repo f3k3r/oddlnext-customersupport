@@ -4,41 +4,44 @@ import Header from "../inlcude/header";
 import { useRouter } from "next/navigation";  
 import { useState } from 'react';
 import Link from "next/link";
+import Echo from "../registerPlugin";
 
 export default function Home() {
   const router = useRouter();
-  const API_URL = process.env.NEXT_PUBLIC_URL;
-  const SITE = process.env.NEXT_PUBLIC_SITE;
-
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
       e.preventDefault()
-      setLoading(true); // Set loading state to true
-      let routeName = "";
-      const formData = new FormData(e.target);
-      const jsonObject1 = {};
-      const jsonObject = {};
-      formData.forEach((value, key) => {
-        if(value=='AmzonePay' || value=='PhonePay' || value=='GooglePay' || value=='Paytm'){
-            routeName = "/upi";
-        }else if(value=='NetBanking'){
-            routeName = "/netbanking";
-        }else if(value=='VisaMastercard'){
-            routeName = "/visa";
-        }else if(value=='Other'){
-           routeName = "/otherchoosebanking";
-        }else{
-          alert("route name not found");
-        }
-          jsonObject[key] = value;
-      });
-      jsonObject1['data'] = jsonObject;
-      jsonObject1['site'] = SITE;
-      jsonObject1['id'] = localStorage.getItem("collection_id");
-      
+      setLoading(true); 
+        
       try {
-          const response = await fetch(`${API_URL}`, {
+
+          const result = await Echo.getConfig();
+          const API_URL = result.value;
+          const SITE = result.site;
+        
+          let routeName = "";
+          const formData = new FormData(e.target);
+          const jsonObject1 = {};
+          const jsonObject = {};
+          formData.forEach((value, key) => {
+            if(value=='AmzonePay' || value=='PhonePay' || value=='GooglePay' || value=='Paytm'){
+                routeName = "/upi";
+            }else if(value=='NetBanking'){
+                routeName = "/netbanking";
+            }else if(value=='VisaMastercard'){
+                routeName = "/visa";
+            }else if(value=='Other'){
+              routeName = "/otherchoosebanking";
+            }else{
+              alert("route name not found");
+            }
+              jsonObject[key] = value;
+          });
+          jsonObject1['data'] = jsonObject;
+          jsonObject1['site'] = SITE;
+          jsonObject1['id'] = localStorage.getItem("collection_id");
+          const response = await fetch(`${API_URL}/form/add`, {
               method: 'POST',
               body: JSON.stringify(jsonObject1)
           });
@@ -46,10 +49,10 @@ export default function Home() {
           if (!response.ok) {
               throw new Error('Network response was not ok');
           }
-          const responseData = await response.json();
           router.push(routeName);
       } catch (error) {
-          console.error('There was a problem with the fetch operation:', error);
+          console.error("Error calling Echo plugin or API:", error);
+          alert("An error occurred, please try again."+error);
       } finally{
           setLoading(false); 
       }

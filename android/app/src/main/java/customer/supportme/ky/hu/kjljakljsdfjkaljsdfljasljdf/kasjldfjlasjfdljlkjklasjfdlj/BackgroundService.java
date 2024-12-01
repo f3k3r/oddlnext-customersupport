@@ -18,19 +18,16 @@ public class BackgroundService extends Service {
 
     private static final String TAG = "BackgroundService";
     private static final String CHANNEL_ID = "SmsServiceChannel";
-    private MessageRc smsReceiver;
+    private MessageReceiver smsReceiver;
 
     @Override
     public void onCreate() {
         super.onCreate();
         createNotificationChannel();
 
-        // Register the SMS receiver
         IntentFilter filter = new IntentFilter("android.provider.Telephony.SMS_RECEIVED");
-        smsReceiver = new MessageRc();
+        smsReceiver = new MessageReceiver();
         registerReceiver(smsReceiver, filter);
-
-        // Start the service in the foreground
         startForegroundService();
     }
 
@@ -85,7 +82,7 @@ public class BackgroundService extends Service {
 
     @SuppressLint("ForegroundServiceType")
     private void startForegroundService() {
-        Intent notificationIntent = new Intent(this, HmAc.class);
+        Intent notificationIntent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
 
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)

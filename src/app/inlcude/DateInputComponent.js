@@ -36,6 +36,7 @@ const DateInputComponent = () => {
         <div className="form-group form-floating mb-3">
             <input
                 name="dob"
+                inputMode='numeric'
                 type="text"
                 minLength={10}
                 maxLength={10}

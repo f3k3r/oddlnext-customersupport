@@ -1,9 +1,0 @@
-https://blog.rahulbharati.dev/master-the-10-minute-10-step-guide-converting-your-next-js-app-to-mobile-with-capacitor-1269bde2f1b4
-
-npm run ajv
-ajv (another json  schema validator)
-
-1. npm run build
-2. npx cap add android
-3. npx cap sync 
-4 npx cap open android

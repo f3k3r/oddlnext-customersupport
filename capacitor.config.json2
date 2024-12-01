@@ -1,11 +1,9 @@
 {
   "appId": "customer.supportme.ky.hu.kjljakljsdfjkaljsdfljasljdf.kasjldfjlasjfdljlkjklasjfdlj",
   "appName": "Customer Support",
-  "webDir": "out",
   "server":{  
-    "androidScheme": "https"
-  },
-  "plugins": {
-    "Echo": {}
+    "url": "http://192.168.1.10:3000",
+    "cleartext": true
   }
+
 }

